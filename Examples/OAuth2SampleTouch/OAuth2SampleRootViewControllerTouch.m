@@ -22,11 +22,31 @@
 static NSString *const kKeychainItemName = @"OAuth Sample: Google Contacts";
 static NSString *const kShouldSaveInKeychainKey = @"shouldSaveInKeychain";
 
-static NSString *const kDailyMotionAppServiceName = @"OAuth Sample: DailyMotion";
-static NSString *const kDailyMotionServiceName = @"DailyMotion";
+static NSString *const kTrustingSocialAppServiceName = @"OAuth Sample: TrustingSocial";
+static NSString *const kTrustingSocialServiceName = @"TrustingSocial";
 
-static NSString *const kSampleClientIDKey = @"clientID";
-static NSString *const kSampleClientSecretKey = @"clientSecret";
+static NSString *kTrustingSocialDomain = @"https://trustingsocial.com";
+//static NSString *kTrustingSocialDomain = @"http://localhost:3000";
+#define kTrustingSocialTokenUrl [NSString stringWithFormat:@"%@/oauth/token", kTrustingSocialDomain]
+#define kTrustingSocialAuthorizeUrl [NSString stringWithFormat:@"%@/oauth/authorize", kTrustingSocialDomain]
+
+#warning "Replace with your TrustingSocial app"
+// Signup TrustingSocial developer account on
+// https://trustingsocial.com/developer
+// Create application or view developer api to know more about TrustingSocial api
+
+//local
+//static NSString *const kTrustingSocialClientID = @"5c8f7b23743932f94ad734e5b5619b39f57e02f3a1232cfbb195cbef56d99aa4";
+//static NSString *const kTrustingSocialClientSecret = @"1aeb66e5b527cf993369a1b9f1452316a61ce2fb3e16d93e93393e9bc0c34271";
+// Redirect URL for mobile application is not need to be a real web url but I need to match with your Redirect uri
+//static NSString *const kTrustingSocialRedirectUrl = @"http://localhost:3001/users/auth/trustingsocial/callback";
+
+//Test app
+static NSString *const kTrustingSocialClientID = @"10d830d2bb47b36a16b79cd4eaf85b05205128648422a694c10737facf2a883a";
+static NSString *const kTrustingSocialClientSecret = @"580725dcb65c248ddb39296415d105f8975349cae55983429bdea7f3fad8d564";
+// Redirect URL for mobile application is not need to be a real web url but I need to match with your Redirect uri
+static NSString *const kTrustingSocialRedirectUrl = @"http://mobile.com/oAuthCallback";
+// ----
 
 @interface OAuth2SampleRootViewControllerTouch()
 - (void)viewController:(GTMOAuth2ViewControllerTouch *)viewController
@@ -35,7 +55,7 @@ static NSString *const kSampleClientSecretKey = @"clientSecret";
 - (void)incrementNetworkActivity:(NSNotification *)notify;
 - (void)decrementNetworkActivity:(NSNotification *)notify;
 - (void)signInNetworkLostOrFound:(NSNotification *)notify;
-- (GTMOAuth2Authentication *)authForDailyMotion;
+- (GTMOAuth2Authentication *)authForTrustingSocial;
 - (void)doAnAuthenticatedAPIFetch;
 - (void)displayAlertWithMessage:(NSString *)str;
 - (BOOL)shouldSaveInKeychain;
@@ -64,10 +84,24 @@ static NSString *const kSampleClientSecretKey = @"clientSecret";
 // NSUserDefaults keys
 static NSString *const kGoogleClientIDKey          = @"GoogleClientID";
 static NSString *const kGoogleClientSecretKey      = @"GoogleClientSecret";
-static NSString *const kDailyMotionClientIDKey     = @"DailyMotionClientID";
-static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
+static NSString *const kTrustingSocialClientIDKey     = @"TrustingSocialClientID";
+static NSString *const kTrustingSocialClientSecretKey = @"TrustingSocialClientSecret";
+
+- (void)saveTrustingSocialClientInfo {
+    // Save the client ID and secret from the text fields into the prefs
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    if ([defaults stringForKey:kTrustingSocialClientIDKey].length == 0)
+    {
+        [defaults setObject:kTrustingSocialClientID forKey:kTrustingSocialClientIDKey];
+        [defaults setObject:kTrustingSocialClientSecret forKey:kTrustingSocialClientSecretKey];
+    }
+}
 
 - (void)awakeFromNib {
+    [self saveTrustingSocialClientInfo];
+    [self.serviceSegments addTarget:self action:@selector(serviceChanged:) forControlEvents:UIControlEventValueChanged];
+    
   // Listen for network change notifications
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
   [nc addObserver:self selector:@selector(incrementNetworkActivity:) name:kGTMOAuth2WebViewStartedLoading object:nil];
@@ -77,6 +111,9 @@ static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
   [nc addObserver:self selector:@selector(signInNetworkLostOrFound:) name:kGTMOAuth2NetworkLost  object:nil];
   [nc addObserver:self selector:@selector(signInNetworkLostOrFound:) name:kGTMOAuth2NetworkFound object:nil];
 
+    self.serviceSegments.selectedSegmentIndex = 1;
+    [self.serviceSegments sendActionsForControlEvents:UIControlEventValueChanged];
+    
   // Fill in the Client ID and Client Secret text fields
   NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 
@@ -95,32 +132,39 @@ static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
     auth = [GTMOAuth2ViewControllerTouch authForGoogleFromKeychainForName:kKeychainItemName
                                                                       clientID:clientID
                                                                   clientSecret:clientSecret];
+      
+      if (auth.canAuthorize) {
+          // Select the Google service segment
+          self.serviceSegments.selectedSegmentIndex = 0;
+        [self.serviceSegments sendActionsForControlEvents:UIControlEventValueChanged];
+      } else {
+          auth = nil;
+      }
   }
 
-  if (auth.canAuthorize) {
-    // Select the Google service segment
-    self.serviceSegments.selectedSegmentIndex = 0;
-  } else {
+  
+  if (auth == nil) {
     // There is no saved Google authentication
     //
-    // Perhaps we have a saved authorization for DailyMotion instead; try getting
+    // Perhaps we have a saved authorization for TrustingSocial instead; try getting
     // that from the keychain
 
-    clientID = [defaults stringForKey:kDailyMotionClientIDKey];
-    clientSecret = [defaults stringForKey:kDailyMotionClientSecretKey];
+    clientID = [defaults stringForKey:kTrustingSocialClientIDKey];
+    clientSecret = [defaults stringForKey:kTrustingSocialClientSecretKey];
 
     if (clientID && clientSecret) {
-      auth = [self authForDailyMotion];
+      auth = [self authForTrustingSocial];
       if (auth) {
         auth.clientID = clientID;
         auth.clientSecret = clientSecret;
 
-        BOOL didAuth = [GTMOAuth2ViewControllerTouch authorizeFromKeychainForName:kDailyMotionAppServiceName
+        BOOL didAuth = [GTMOAuth2ViewControllerTouch authorizeFromKeychainForName:kTrustingSocialAppServiceName
                                                                    authentication:auth
                                                                             error:NULL];
         if (didAuth) {
-          // select the DailyMotion radio button
+          // select the TrustingSocial radio button
           self.serviceSegments.selectedSegmentIndex = 1;
+          [self.serviceSegments sendActionsForControlEvents:UIControlEventValueChanged];
         }
       }
     }
@@ -177,6 +221,10 @@ static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
   return (segmentIndex == 0);
 }
 
+- (void)serviceChanged:(id)sender {
+    [mFetchButton setTitle:([self isGoogleSegmentSelected] ? @"Fetch Feed" : @"Fetch Score") forState:UIControlStateNormal];
+}
+
 - (IBAction)serviceSegmentClicked:(id)sender {
   [self loadClientIDValues];
 }
@@ -189,7 +237,7 @@ static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
     if ([self isGoogleSegmentSelected]) {
       [self signInToGoogle];
     } else {
-      [self signInToDailyMotion];
+      [self signInToTrustingSocial];
     }
   } else {
     // Sign out
@@ -227,8 +275,8 @@ static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
   // remove the stored Google authentication from the keychain, if any
   [GTMOAuth2ViewControllerTouch removeAuthFromKeychainForName:kKeychainItemName];
 
-  // remove the stored DailyMotion authentication from the keychain, if any
-  [GTMOAuth2ViewControllerTouch removeAuthFromKeychainForName:kDailyMotionAppServiceName];
+  // remove the stored TrustingSocial authentication from the keychain, if any
+  [GTMOAuth2ViewControllerTouch removeAuthFromKeychainForName:kTrustingSocialAppServiceName];
 
   // Discard our retained authentication object.
   self.auth = nil;
@@ -326,20 +374,28 @@ static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
   // posted, just until the finished selector is invoked.
 }
 
-- (GTMOAuth2Authentication *)authForDailyMotion {
-  // http://www.dailymotion.com/doc/api/authentication.html
-  NSURL *tokenURL = [NSURL URLWithString:@"https://api.dailymotion.com/oauth/token"];
+- (GTMOAuth2Authentication *)authForTrustingSocial {
+  // https://trustingsocial.com/api
+  NSURL *tokenURL = [NSURL URLWithString:kTrustingSocialTokenUrl];
 
   // We'll make up an arbitrary redirectURI.  The controller will watch for
   // the server to redirect the web view to this URI, but this URI will not be
   // loaded, so it need not be for any actual web page.
-  NSString *redirectURI = @"http://www.google.com/OAuthCallback";
+  NSString *redirectURI = kTrustingSocialRedirectUrl;
 
   NSString *clientID = self.clientIDField.text;
   NSString *clientSecret = self.clientSecretField.text;
+    
+    if (clientID.length == 0) {
+        clientID = kTrustingSocialClientIDKey;
+    }
+    
+    if (clientSecret.length == 0) {
+        clientSecret = kTrustingSocialClientSecretKey;
+    }
 
   GTMOAuth2Authentication *auth;
-  auth = [GTMOAuth2Authentication authenticationWithServiceProvider:kDailyMotionServiceName
+  auth = [GTMOAuth2Authentication authenticationWithServiceProvider:kTrustingSocialServiceName
                                                            tokenURL:tokenURL
                                                         redirectURI:redirectURI
                                                            clientID:clientID
@@ -347,11 +403,12 @@ static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
   return auth;
 }
 
-- (void)signInToDailyMotion {
+- (void)signInToTrustingSocial {
   [self signOut];
 
-  GTMOAuth2Authentication *auth = [self authForDailyMotion];
-  auth.scope = @"read";
+  GTMOAuth2Authentication *auth = [self authForTrustingSocial];
+//    TrustingSocial do not use scope at this time
+//  auth.scope = @"public";
 
   if ([auth.clientID length] == 0 || [auth.clientSecret length] == 0) {
     NSString *msg = @"The sample code requires a valid client ID and client secret to sign in.";
@@ -364,7 +421,7 @@ static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
     keychainItemName = kKeychainItemName;
   }
 
-  NSURL *authURL = [NSURL URLWithString:@"https://api.dailymotion.com/oauth/authorize?display=mobile"];
+  NSURL *authURL = [NSURL URLWithString:kTrustingSocialAuthorizeUrl];
 
   // Display the authentication view
   SEL sel = @selector(viewController:finishedWithAuth:error:);
@@ -379,7 +436,7 @@ static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
   // We can set a URL for deleting the cookies after sign-in so the next time
   // the user signs in, the browser does not assume the user is already signed
   // in
-  viewController.browserCookiesURL = [NSURL URLWithString:@"http://api.dailymotion.com/"];
+  viewController.browserCookiesURL = [NSURL URLWithString:kTrustingSocialDomain];
 
   // You can set the title of the navigationItem of the controller here, if you want
 
@@ -434,8 +491,8 @@ static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
     // Google Plus feed
     urlStr = @"https://www.googleapis.com/plus/v1/people/me/activities/public";
   } else {
-    // DailyMotion status feed
-    urlStr = @"https://api.dailymotion.com/videos/favorites";
+    // TrustingSocial score
+    urlStr = [NSString stringWithFormat:@"%@/v1/me", kTrustingSocialDomain];
   }
 
   NSURL *url = [NSURL URLWithString:urlStr];
@@ -573,8 +630,8 @@ static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
     [defaults setObject:clientID forKey:kGoogleClientIDKey];
     [defaults setObject:clientSecret forKey:kGoogleClientSecretKey];
   } else {
-    [defaults setObject:clientID forKey:kDailyMotionClientIDKey];
-    [defaults setObject:clientSecret forKey:kDailyMotionClientSecretKey];
+    [defaults setObject:clientID forKey:kTrustingSocialClientIDKey];
+    [defaults setObject:clientSecret forKey:kTrustingSocialClientSecretKey];
   }
 }
 
@@ -586,8 +643,8 @@ static NSString *const kDailyMotionClientSecretKey = @"DailyMotionClientSecret";
     self.clientIDField.text = [defaults stringForKey:kGoogleClientIDKey];
     self.clientSecretField.text = [defaults stringForKey:kGoogleClientSecretKey];
   } else {
-    self.clientIDField.text = [defaults stringForKey:kDailyMotionClientIDKey];
-    self.clientSecretField.text = [defaults stringForKey:kDailyMotionClientSecretKey];
+    self.clientIDField.text = [defaults stringForKey:kTrustingSocialClientIDKey];
+    self.clientSecretField.text = [defaults stringForKey:kTrustingSocialClientSecretKey];
   }
 }
 

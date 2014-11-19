@@ -576,6 +576,10 @@ finishedRefreshWithFetcher:(GTMOAuth2Fetcher *)fetcher
 
   NSURL *requestURL = [request URL];
   NSString *scheme = [requestURL scheme];
+#if SHOULD_AUTHORIZE_ALL_REQUEST
+    self.shouldAuthorizeAllRequests = true;
+#endif    
+    
   BOOL isAuthorizableRequest = self.shouldAuthorizeAllRequests
     || [scheme caseInsensitiveCompare:@"https"] == NSOrderedSame
     || [requestURL isFileURL];
@@ -873,6 +877,13 @@ finishedRefreshWithFetcher:(GTMOAuth2Fetcher *)fetcher
                 didFinishSelector:@selector(tokenFetcher:finishedWithData:error:)];
 
   [self notifyFetchIsRunning:YES fetcher:fetcher type:fetchType];
+
+#if DEBUG
+//    HaPM: add localhost testing
+    fetcher.allowLocalhostRequest = true;
+    fetcher.allowedInsecureSchemes = @[@"http"];
+#endif
+    
   return fetcher;
 }
 

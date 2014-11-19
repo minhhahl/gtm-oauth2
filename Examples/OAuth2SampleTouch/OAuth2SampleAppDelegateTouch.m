@@ -30,7 +30,15 @@
 }
 
 - (void)applicationDidFinishLaunching:(UIApplication *)application {
-  [mWindow addSubview:[mNavigationController view]];
+    mWindow = [UIWindow new];
+    
+    // Real Size
+    CGRect frame = [UIScreen mainScreen].bounds;
+    
+    // Real Size + 0.000001
+    mWindow.frame = CGRectMake(0, 0, frame.size.width+0.000001, frame.size.height+0.000001);
+    
+    [mWindow addSubview:[mNavigationController view]];
   [mWindow makeKeyAndVisible];
 }
 

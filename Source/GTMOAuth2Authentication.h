@@ -20,6 +20,12 @@
 
 #import <Foundation/Foundation.h>
 
+#if DEBUG
+    #ifndef SHOULD_AUTHORIZE_ALL_REQUEST
+        #define SHOULD_AUTHORIZE_ALL_REQUEST 1
+    #endif
+#endif
+
 #if GTM_USE_SESSION_FETCHER
   #import "GTMSessionFetcher.h"
 #else

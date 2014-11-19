@@ -61,7 +61,7 @@
 - (IBAction)toggleShouldSaveInKeychain:(id)sender;
 
 - (void)signInToGoogle;
-- (void)signInToDailyMotion;
+- (void)signInToTrustingSocial;
 - (void)signOut;
 - (BOOL)isSignedIn;
 

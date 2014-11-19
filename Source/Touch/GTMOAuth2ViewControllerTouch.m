@@ -379,6 +379,9 @@ static GTMOAuth2Keychain* gGTMOAuth2DefaultKeychain = nil;
 - (void)viewDidLoad {
   [super viewDidLoad];
   [self setUpNavigation];
+    
+// fix for remove space at top on new ios version
+    self.automaticallyAdjustsScrollViewInsets = NO;
 }
 
 - (void)setUpNavigation {
