@@ -11,9 +11,10 @@ Run sample project
 
 Open `gtm-oauth2/Examples/OAuth2SampleTouch/OAuth2SampleTouch.xcodeproj`
 
-In this sample project, I had added AppID and AppSecret so you could run it without any setup.
+Note: In this sample project, I had added AppID and AppSecret so you could run it without any setup.
 
 Run on Simulator
+
 Touch `Sign In` button -> Login to your Facebook account -> Login successfully
 
 Waiting about 5-10 seconds for TrustingSocial to process your score
