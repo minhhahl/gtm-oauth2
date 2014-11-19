@@ -1,9 +1,14 @@
-TrustingSocial OAuth2 demo for iOS
+TrustingSocial OAuth2 intergration for iOS
 ==========
 
 git mirror of http://code.google.com/p/gtm-oauth2/
 
 This is demo app for http://TrustingSocial.com OAuth2
+
+Demo features
+========
+1. Signup with TrustingSocial from iOS app
+2. Get user's TrustingSocial score
 
 Run sample project
 ========
