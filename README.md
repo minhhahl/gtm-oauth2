@@ -1,4 +1,4 @@
-gtm-oauth2
+TrustingSocial OAuth2 demo for iOS
 ==========
 
 git mirror of http://code.google.com/p/gtm-oauth2/
