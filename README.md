@@ -15,7 +15,10 @@ In this sample project, I had added AppID and AppSecret so you could run it with
 
 Run on Simulator
 Touch `Sign In` button -> Login to your Facebook account -> Login successfully
-Waiting about 10 seconds for TrustingSocial process your score -> Touch `Fetch score` button to show your TrustingSocial score
+
+Waiting about 5-10 seconds for TrustingSocial to process your score
+
+Touch `Fetch score` button to show your TrustingSocial score
 
 Register your TrustingSocial Application
 ========
